@@ -77,12 +77,15 @@ function resize() {
 addEventListener('resize', resize);
 
 let shotReq = null;
-window.__dbg = {
-  THREE, U, camera, world, renderer, post, player, input, creatures, game, Save, Glyphs,
-  setCam(x, y, z, yw = 0, pt = 0) { free = true; camera.position.set(x, y, z); fyaw = yw; fpitch = pt; },
-  play() { free = false; },
-  shot(name) { return new Promise((res) => (shotReq = { name, res })); },
-};
+// 確認用の道具（開発サーバーのときだけ。公開版には入れない）
+if (import.meta.env.DEV) {
+  window.__dbg = {
+    THREE, U, camera, world, renderer, post, player, input, creatures, game, Save, Glyphs,
+    setCam(x, y, z, yw = 0, pt = 0) { free = true; camera.position.set(x, y, z); fyaw = yw; fpitch = pt; },
+    play() { free = false; },
+    shot(name) { return new Promise((res) => (shotReq = { name, res })); },
+  };
+}
 
 const clock = new THREE.Timer();
 let time = 0;
@@ -145,15 +148,17 @@ function autoQuality(dt) {
   }
 }
 requestAnimationFrame(frame);
-// ペインが隠れていて rAF が止まっているときの確認用：数コマ描く
-window.__dbg.renderOnce = (n = 1) => {
-  for (let i = 0; i < n; i++) frame(undefined, true);
-};
-// n コマ進めてから shots/ に保存する
-window.__dbg.snap = async (name, n = 1) => {
-  if (n > 1) window.__dbg.renderOnce(n - 1);
-  const p = window.__dbg.shot(name);
-  frame(undefined, true);
-  await p;
-  return name;
-};
+if (import.meta.env.DEV) {
+  // ペインが隠れていて rAF が止まっているときの確認用：数コマ描く
+  window.__dbg.renderOnce = (n = 1) => {
+    for (let i = 0; i < n; i++) frame(undefined, true);
+  };
+  // n コマ進めてから shots/ に保存する
+  window.__dbg.snap = async (name, n = 1) => {
+    if (n > 1) window.__dbg.renderOnce(n - 1);
+    const p = window.__dbg.shot(name);
+    frame(undefined, true);
+    await p;
+    return name;
+  };
+}
