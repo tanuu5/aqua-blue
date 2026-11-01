@@ -425,8 +425,10 @@ export class Jellies {
     const bellGeo = new THREE.SphereGeometry(0.2, 24, 10, 0, Math.PI * 2, 0, Math.PI * 0.45);
     bellGeo.scale(1, 0.55, 1);
     const ringGeo = new THREE.TorusGeometry(0.035, 0.009, 6, 16);
-    const mat = new THREE.ShaderMaterial({
-      uniforms: { ...U, uTint: { value: new THREE.Color(0.75, 0.85, 1.0) } },
+    // Bell and rings share one shader and differ only in tint. Build each from the same settings:
+    // mat.clone() would deep-copy the shared uniforms U (warning on its render-target textures).
+    const jellyMat = (tint) => new THREE.ShaderMaterial({
+      uniforms: { ...U, uTint: { value: tint } },
       vertexShader: /* glsl */ `
         varying vec3 vN; varying vec3 vWp; varying vec3 vV;
         void main() {
@@ -456,8 +458,8 @@ export class Jellies {
       blendSrc: THREE.OneFactor,
       blendDst: THREE.OneMinusSrcAlphaFactor,
     });
-    const ringMat = mat.clone();
-    ringMat.uniforms = { ...U, uTint: { value: new THREE.Color(1.0, 0.6, 0.8) } };
+    const mat = jellyMat(new THREE.Color(0.75, 0.85, 1.0));
+    const ringMat = jellyMat(new THREE.Color(1.0, 0.6, 0.8));
     const tentMat = new THREE.LineBasicMaterial({ color: 0x9fc6e0, transparent: true, opacity: 0.35 });
     this.items = [];
     const R = mulberry32(4);
